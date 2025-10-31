@@ -174,10 +174,6 @@ class HotkeyDialog(QDialog):
                 53: "NumpadDivide", 28: "NumpadEnter"
             }
             
-            # Если scan code соответствует Numpad, используем специальное название
-            if native_scan_code in numpad_scan_codes:
-                return numpad_scan_codes[native_scan_code]
-            
             # Дополнительная проверка через virtual key
             native_virtual_key = event.nativeVirtualKey()
             numpad_virtual_keys = {
@@ -188,11 +184,15 @@ class HotkeyDialog(QDialog):
                 111: "NumpadDivide", 13: "NumpadEnter"
             }
             
-            if native_virtual_key in numpad_virtual_keys:
+            # Если это Numpad, возвращаем специальное название
+            if native_scan_code in numpad_scan_codes:
+                return numpad_scan_codes[native_scan_code]
+            elif native_virtual_key in numpad_virtual_keys:
                 return numpad_virtual_keys[native_virtual_key]
-            
-            return key_name
-            
+            else:
+                # Для обычных цифр возвращаем стандартное название
+                return key_name
+                
         except Exception as e:
             print(f"Ошибка определения клавиши: {e}")
             return self.get_key_name(event.key())

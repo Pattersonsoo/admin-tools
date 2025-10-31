@@ -153,12 +153,16 @@ class HotkeyManager(QObject):
             # Приводим к нижнему регистру
             key_sequence = key_sequence.lower()
             
-            # Простая замена для основных комбинаций
+            # Сопоставление для pynput
             replacements = {
                 'ctrl+': '<ctrl>+',
                 'alt+': '<alt>+', 
                 'shift+': '<shift>+',
-                'space': '<space>',
+                'win+': '<cmd>+',  # Windows key
+                'meta+': '<cmd>+', # Meta key
+                
+                # Специальные клавиши
+                'space': ' ',
                 'tab': '<tab>',
                 'enter': '<enter>',
                 'return': '<enter>',
@@ -175,25 +179,56 @@ class HotkeyManager(QObject):
                 'down': '<down>',
                 'left': '<left>',
                 'right': '<right>',
+                'caps_lock': '<caps_lock>',
+                'num_lock': '<num_lock>',
+                'scroll_lock': '<scroll_lock>',
+                'print_screen': '<print_screen>',
+                'pause': '<pause>',
                 
-                # Numpad клавиши - pynput использует специальные коды
-                'numpad0': '<kp_0>', 'numpad1': '<kp_1>', 'numpad2': '<kp_2>',
-                'numpad3': '<kp_3>', 'numpad4': '<kp_4>', 'numpad5': '<kp_5>',
-                'numpad6': '<kp_6>', 'numpad7': '<kp_7>', 'numpad8': '<kp_8>',
-                'numpad9': '<kp_9>', 'numpaddecimal': '<kp_decimal>', 
-                'numpadplus': '<kp_add>', 'numpadminus': '<kp_subtract>', 
-                'numpadmultiply': '<kp_multiply>', 'numpaddivide': '<kp_divide>',
-                'numpadenter': '<kp_enter>',
+                # Обычные цифры и буквы остаются как есть
+                '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
+                '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
+                
+                # Numpad клавиши в правильном формате для pynput
+                'numpad0': '<num_lock>',  # pynput использует <num_lock> для Numpad
+                'numpad1': '<end>',       # Numpad 1 = End
+                'numpad2': '<down>',      # Numpad 2 = Down Arrow
+                'numpad3': '<page_down>', # Numpad 3 = Page Down
+                'numpad4': '<left>',      # Numpad 4 = Left Arrow
+                'numpad5': '<clear>',     # Numpad 5 = Clear (нет в pynput, используем num_lock)
+                'numpad6': '<right>',     # Numpad 6 = Right Arrow
+                'numpad7': '<home>',      # Numpad 7 = Home
+                'numpad8': '<up>',        # Numpad 8 = Up Arrow
+                'numpad9': '<page_up>',   # Numpad 9 = Page Up
+                'numpaddecimal': '<delete>',
+                'numpadplus': '+',
+                'numpadminus': '-',
+                'numpadmultiply': '*',
+                'numpaddivide': '/',
+                'numpadenter': '<enter>',
             }
             
-            # Заменяем все известные комбинации
-            result = key_sequence
-            for find, replace in replacements.items():
-                result = result.replace(find, replace)
+            # Разбираем комбинацию клавиш
+            parts = key_sequence.split('+')
+            converted_parts = []
             
-            # Обработка функциональных клавиш
-            if result.startswith('f') and len(result) > 1 and result[1:].isdigit():
-                result = f'<{result}>'
+            for part in parts:
+                if part in replacements:
+                    converted_parts.append(replacements[part])
+                else:
+                    # Для букв, функциональных клавиш и других оставляем как есть
+                    converted_parts.append(part)
+            
+            result = '+'.join(converted_parts)
+            
+            # Обработка функциональных клавиш (F1-F12)
+            if len(parts) == 1 and parts[0].startswith('f') and parts[0][1:].isdigit():
+                result = f'<{parts[0]}>'
+            
+            # Убираем двойные модификаторы если есть
+            result = result.replace('<ctrl>+<ctrl>', '<ctrl>')
+            result = result.replace('<alt>+<alt>', '<alt>')
+            result = result.replace('<shift>+<shift>', '<shift>')
             
             # Для отладки
             print(f"Конвертация: '{key_sequence}' -> '{result}'")

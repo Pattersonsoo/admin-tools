@@ -865,8 +865,8 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Admin Tools by Notoriuz - Главное меню")
         self.setFixedSize(600, 500)
-        
-
+        self.notification_manager = NotificationManager(self)
+    
         self.setup_hotkeys()
         
         # Центрируем окно на экране
